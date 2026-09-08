@@ -1,105 +1,50 @@
-// Client-side rendering and interaction for the Flask-backed Sudoku
-const SIZE = 9;
-let puzzle = [];
+const { createElement: h, useEffect, useState } = React;
+const DIFFICULTIES = { easy: 'Easy', medium: 'Medium', hard: 'Hard' };
+const STORAGE_KEY = 'gridline-sudoku-scores';
+const emptyBoard = () => Array.from({ length: 9 }, () => Array(9).fill(0));
+function readScores() { try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; } catch { return []; } }
+function formatTime(seconds) { return `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`; }
 
-function createBoardElement() {
-  const boardDiv = document.getElementById('sudoku-board');
-  boardDiv.innerHTML = '';
-  for (let i = 0; i < SIZE; i++) {
-    const rowDiv = document.createElement('div');
-    rowDiv.className = 'sudoku-row';
-    for (let j = 0; j < SIZE; j++) {
-      const input = document.createElement('input');
-      input.type = 'text';
-      input.maxLength = 1;
-      input.className = 'sudoku-cell';
-      input.dataset.row = i;
-      input.dataset.col = j;
-      input.addEventListener('input', (e) => {
-        const val = e.target.value.replace(/[^1-9]/g, '');
-        e.target.value = val;
-      });
-      rowDiv.appendChild(input);
-    }
-    boardDiv.appendChild(rowDiv);
-  }
+function Header({ darkMode, onToggle }) {
+  return h('header', { className: 'topbar' }, h('div', { className: 'brand' }, h('span', { className: 'brand-mark' }, '9'), h('div', null, h('strong', null, 'GRIDLINE'), h('span', null, 'A focused Sudoku studio'))), h('button', { className: 'theme-toggle', onClick: onToggle }, darkMode ? 'Light mode' : 'Dark mode'));
 }
 
-function renderPuzzle(puz) {
-  puzzle = puz;
-  createBoardElement();
-  const boardDiv = document.getElementById('sudoku-board');
-  const inputs = boardDiv.getElementsByTagName('input');
-  for (let i = 0; i < SIZE; i++) {
-    for (let j = 0; j < SIZE; j++) {
-      const idx = i * SIZE + j;
-      const val = puzzle[i][j];
-      const inp = inputs[idx];
-      if (val !== 0) {
-        inp.value = val;
-        inp.disabled = true;
-        inp.className += ' prefilled';
-      } else {
-        inp.value = '';
-        inp.disabled = false;
-      }
-    }
-  }
+function Board({ board, puzzle, hints, errors, selectedNumber, onChange }) {
+  return h('div', { className: 'board', role: 'grid', 'aria-label': 'Sudoku board' }, board.map((row, rowIndex) => row.map((value, colIndex) => {
+    const key = `${rowIndex}-${colIndex}`; const locked = puzzle[rowIndex][colIndex] !== 0 || hints.has(key);
+    return h('input', { key, className: `cell ${selectedNumber !== 0 && value === selectedNumber ? 'number-highlight' : ''} ${hints.has(key) ? 'hint-cell' : ''} ${errors.has(key) ? 'error-cell' : ''}`, value: value || '', disabled: locked, maxLength: 1, inputMode: 'numeric', 'aria-label': `Row ${rowIndex + 1}, column ${colIndex + 1}`, onChange: event => onChange(rowIndex, colIndex, event.target.value), onKeyDown: event => { if (!/^[1-9]$/.test(event.key) && !['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight'].includes(event.key)) event.preventDefault(); } });
+  })));
 }
 
-async function newGame() {
-  const res = await fetch('/new');
-  const data = await res.json();
-  renderPuzzle(data.puzzle);
-  document.getElementById('message').innerText = '';
+function NumberTracker({ board, selectedNumber, onSelect }) {
+  const counts = Array.from({ length: 10 }, (_, value) => value === 0 ? 0 : board.flat().filter(cell => cell === value).length);
+  return h('section', { className: 'number-tracker', 'aria-label': 'Number tracker' },
+    h('div', { className: 'tracker-heading' }, h('span', { className: 'eyebrow' }, 'Number tracker'), h('span', null, 'Select a number to find it')),
+    h('div', { className: 'number-list' }, counts.slice(1).map((count, index) => {
+      const number = index + 1; const complete = count === 9;
+      return h('button', { key: number, className: `number-chip ${selectedNumber === number ? 'active' : ''} ${complete ? 'complete' : ''}`, onClick: () => onSelect(selectedNumber === number ? 0 : number), 'aria-label': `${number}, ${count} of 9 used` }, h('strong', null, number), h('span', null, complete ? 'Done' : `${count}/9`));
+    })));
 }
 
-async function checkSolution() {
-  const boardDiv = document.getElementById('sudoku-board');
-  const inputs = boardDiv.getElementsByTagName('input');
-  const board = [];
-  for (let i = 0; i < SIZE; i++) {
-    board[i] = [];
-    for (let j = 0; j < SIZE; j++) {
-      const idx = i * SIZE + j;
-      const val = inputs[idx].value;
-      board[i][j] = val ? parseInt(val, 10) : 0;
-    }
-  }
-  const res = await fetch('/check', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({board})
-  });
-  const data = await res.json();
-  const msg = document.getElementById('message');
-  if (data.error) {
-    msg.style.color = '#d32f2f';
-    msg.innerText = data.error;
-    return;
-  }
-  const incorrect = new Set(data.incorrect.map(x => x[0]*SIZE + x[1]));
-  for (let idx = 0; idx < inputs.length; idx++) {
-    const inp = inputs[idx];
-    if (inp.disabled) continue;
-    inp.className = 'sudoku-cell';
-    if (incorrect.has(idx)) {
-      inp.className = 'sudoku-cell incorrect';
-    }
-  }
-  if (incorrect.size === 0) {
-    msg.style.color = '#388e3c';
-    msg.innerText = 'Congratulations! You solved it!';
-  } else {
-    msg.style.color = '#d32f2f';
-    msg.innerText = 'Some cells are incorrect.';
-  }
+function Scores({ scores }) {
+  return h('section', { className: 'scores-panel' }, h('div', { className: 'section-heading' }, h('span', { className: 'eyebrow' }, 'Hall of fame'), h('h2', null, 'Top 10 solves')), scores.length ? h('ol', { className: 'score-list' }, scores.map((score, index) => h('li', { key: `${score.date}-${index}` }, h('span', { className: 'rank' }, String(index + 1).padStart(2, '0')), h('span', { className: 'score-name' }, score.name), h('span', { className: 'score-detail' }, `${formatTime(score.time)} · ${score.hints} hint${score.hints === 1 ? '' : 's'} · ${score.difficulty}`)))) : h('p', { className: 'empty-state' }, 'Your fastest solves will appear here.'));
 }
 
-// Wire buttons
-window.addEventListener('load', () => {
-  document.getElementById('new-game').addEventListener('click', newGame);
-  document.getElementById('check-solution').addEventListener('click', checkSolution);
-  // initialize
-  newGame();
-});
+function CompletionModal({ seconds, hintsUsed, onSave }) {
+  return h('div', { className: 'modal-backdrop' }, h('div', { className: 'completion-modal' }, h('span', { className: 'eyebrow' }, 'Board cleared'), h('h2', null, 'That was a clean solve.'), h('p', null, `You finished in ${formatTime(seconds)} with ${hintsUsed} hint${hintsUsed === 1 ? '' : 's'}.`), h('form', { onSubmit: onSave }, h('label', { htmlFor: 'player-name' }, 'Add your name to the leaderboard'), h('div', { className: 'name-row' }, h('input', { id: 'player-name', name: 'name', placeholder: 'Your name', maxLength: 20, required: true, autoFocus: true }), h('button', { className: 'button primary' }, 'Save score')))));
+}
+
+function App() {
+  const [difficulty, setDifficulty] = useState('medium'); const [puzzle, setPuzzle] = useState(emptyBoard()); const [board, setBoard] = useState(emptyBoard()); const [hints, setHints] = useState(new Set()); const [errors, setErrors] = useState(new Set()); const [selectedNumber, setSelectedNumber] = useState(0); const [seconds, setSeconds] = useState(0); const [hintsUsed, setHintsUsed] = useState(0); const [scores, setScores] = useState(readScores); const [message, setMessage] = useState(''); const [status, setStatus] = useState('idle'); const [darkMode, setDarkMode] = useState(() => localStorage.getItem('gridline-dark') === 'true'); const [completed, setCompleted] = useState(false);
+  useEffect(() => { document.body.classList.toggle('dark', darkMode); localStorage.setItem('gridline-dark', darkMode); }, [darkMode]);
+  useEffect(() => { if (status === 'playing') { const id = setInterval(() => setSeconds(value => value + 1), 1000); return () => clearInterval(id); } }, [status]);
+  async function startGame(nextDifficulty = difficulty) { setStatus('loading'); setMessage(''); setErrors(new Set()); setHints(new Set()); setSelectedNumber(0); setHintsUsed(0); setSeconds(0); setCompleted(false); try { const response = await fetch(`/new?difficulty=${nextDifficulty}`); const data = await response.json(); setDifficulty(nextDifficulty); setPuzzle(data.puzzle); setBoard(data.puzzle.map(row => row.slice())); setStatus('playing'); } catch { setStatus('idle'); setMessage('Could not start a new puzzle. Please try again.'); } }
+  useEffect(() => { startGame(); }, []);
+  function updateCell(row, col, rawValue) { const value = rawValue === '' ? 0 : Number(rawValue); const next = board.map(line => line.slice()); next[row][col] = value; setBoard(next); const conflict = value !== 0 && (next[row].some((cell, index) => index !== col && cell === value) || next.some((line, index) => index !== row && line[col] === value) || next.slice(Math.floor(row / 3) * 3, Math.floor(row / 3) * 3 + 3).some((line, lineIndex) => line.slice(Math.floor(col / 3) * 3, Math.floor(col / 3) * 3 + 3).some((cell, cellIndex) => cell === value && (lineIndex !== row % 3 || cellIndex !== col % 3)))); setErrors(previous => { const result = new Set(previous); if (conflict) result.add(`${row}-${col}`); else result.delete(`${row}-${col}`); return result; }); setMessage(conflict ? 'That number conflicts with this row, column, or box.' : ''); }
+  async function checkPuzzle() { const response = await fetch('/check', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ board }) }); const data = await response.json(); if (data.error) { setMessage(data.error); return; } const nextErrors = new Set(data.incorrect.map(([row, col]) => `${row}-${col}`)); setErrors(nextErrors); if (!nextErrors.size) { setStatus('complete'); setCompleted(true); setMessage('Puzzle complete. Excellent work.'); } else setMessage(`${nextErrors.size} cell${nextErrors.size === 1 ? '' : 's'} need another look.`); }
+  async function requestHint() { const response = await fetch('/hint', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ board }) }); const data = await response.json(); if (data.error) { setMessage(data.error); return; } const next = board.map(line => line.slice()); next[data.row][data.col] = data.value; setBoard(next); setHints(previous => new Set(previous).add(`${data.row}-${data.col}`)); setHintsUsed(value => value + 1); setMessage('A correct cell has been revealed and locked.'); }
+  function saveScore(event) { event.preventDefault(); const name = new FormData(event.currentTarget).get('name')?.trim() || 'Anonymous'; const nextScores = [...scores, { name, time: seconds, hints: hintsUsed, difficulty: DIFFICULTIES[difficulty], date: Date.now() }].sort((a, b) => a.time - b.time).slice(0, 10); setScores(nextScores); localStorage.setItem(STORAGE_KEY, JSON.stringify(nextScores)); setCompleted(false); }
+  const modal = completed && h(CompletionModal, { seconds, hintsUsed, onSave: saveScore });
+  return h('div', { className: 'app-shell' }, h(Header, { darkMode, onToggle: () => setDarkMode(value => !value) }), h('div', { className: 'layout' }, h('section', { className: 'game-area' }, h('div', { className: 'intro' }, h('div', { className: 'eyebrow' }, 'Daily practice'), h('h1', null, 'Find your flow.'), h('p', null, 'A clean board, one solution, zero distractions.')), h('div', { className: 'game-toolbar' }, h('div', { className: 'difficulty-tabs' }, Object.keys(DIFFICULTIES).map(level => h('button', { key: level, className: difficulty === level ? 'selected' : '', onClick: () => startGame(level) }, DIFFICULTIES[level]))), h('div', { className: 'timer' }, h('span', null, 'TIME'), h('strong', null, formatTime(seconds)))), h(Board, { board, puzzle, hints, errors, selectedNumber, onChange: updateCell }), h(NumberTracker, { board, selectedNumber, onSelect: setSelectedNumber }), h('div', { className: 'game-actions' }, h('button', { className: 'button primary', onClick: checkPuzzle, disabled: status !== 'playing' }, 'Check puzzle'), h('button', { className: 'button secondary', onClick: requestHint, disabled: status !== 'playing' }, 'Use a hint'), h('button', { className: 'new-game', onClick: () => startGame(), disabled: status === 'loading' }, 'New puzzle')), h('p', { className: `message ${errors.size ? 'message-error' : ''}` }, message)), h('aside', { className: 'sidebar' }, h('div', { className: 'stats-card' }, h('span', { className: 'eyebrow' }, 'Current run'), h('div', { className: 'stat-row' }, h('span', null, 'Difficulty'), h('strong', null, DIFFICULTIES[difficulty])), h('div', { className: 'stat-row' }, h('span', null, 'Hints used'), h('strong', null, hintsUsed)), h('div', { className: 'stat-row' }, h('span', null, 'Status'), h('strong', null, status === 'complete' ? 'Solved' : 'In progress'))), h(Scores, { scores }))), modal);
+}
+ReactDOM.createRoot(document.getElementById('root')).render(h(App));

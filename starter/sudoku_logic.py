@@ -39,16 +39,37 @@ def fill_board(board):
                 return False
     return True
 
+def count_solutions(board, limit=2):
+    """Count solutions, stopping early once the requested limit is reached."""
+    for row in range(SIZE):
+        for col in range(SIZE):
+            if board[row][col] == EMPTY:
+                total = 0
+                candidates = list(range(1, SIZE + 1))
+                random.shuffle(candidates)
+                for candidate in candidates:
+                    if is_safe(board, row, col, candidate):
+                        board[row][col] = candidate
+                        total += count_solutions(board, limit - total)
+                        board[row][col] = EMPTY
+                        if total >= limit:
+                            return total
+                return total
+    return 1
+
 def remove_cells(board, clues):
-    attempts = SIZE * SIZE - clues
-    while attempts > 0:
-        row = random.randrange(SIZE)
-        col = random.randrange(SIZE)
-        if board[row][col] != EMPTY:
-            board[row][col] = EMPTY
-            attempts -= 1
+    positions = [(row, col) for row in range(SIZE) for col in range(SIZE)]
+    random.shuffle(positions)
+    for row, col in positions:
+        if sum(cell != EMPTY for line in board for cell in line) <= clues:
+            break
+        value = board[row][col]
+        board[row][col] = EMPTY
+        if count_solutions(board) != 1:
+            board[row][col] = value
 
 def generate_puzzle(clues=35):
+    clues = max(17, min(SIZE * SIZE, clues))
     board = create_empty_board()
     fill_board(board)
     solution = deep_copy(board)
