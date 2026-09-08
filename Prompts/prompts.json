@@ -1,18 +1,22 @@
 [
   {
-    "name": "Sudoku unique-solution check",
-    "prompt": "Review the Sudoku generator and confirm it creates a valid board with exactly one unique solution. Add a helper to validate uniqueness and explain any edge cases."
+    "name": "Setting up your testing framework",
+    "prompt": "Set up a testing framework for the Sudoku logic and verify the app can generate valid puzzles while checking that the rules and flow work correctly."
   },
   {
-    "name": "Top 10 leaderboard",
-    "prompt": "Implement a leaderboard that keeps the top 10 scores in localStorage using player name, time, hints used, and difficulty. Sort by fastest time and keep only the best 10 entries."
+    "name": "Ensuring the Sudoku board has only one unique solution",
+    "prompt": "Review the Sudoku generator and confirm it creates a valid board with exactly one unique solvable solution. Add checks to validate uniqueness and explain edge cases if needed."
   },
   {
-    "name": "Responsive board styling",
-    "prompt": "Style the Sudoku board so each 3x3 region has a distinct background color without changing the grid layout or causing shifts. Keep it readable in both light and dark mode."
+    "name": "Checking for a top 10 score and storing the top 10 in local storage",
+    "prompt": "Implement or review the score logic so the app checks for a top 10 score and stores the top 10 entries in localStorage using player name, time, hints used, and difficulty."
   },
   {
-    "name": "Reject bad Copilot suggestion",
-    "prompt": "Evaluate a proposed code change critically. Reject it if it adds brittle logic, poor accessibility, or invalid Sudoku state handling, and explain the issue before revising the implementation."
+    "name": "Styling the grid so the 3x3 squares have different colors",
+    "prompt": "Style the Sudoku grid so each 3x3 square has a distinct background color without causing layout shifts, while keeping the board readable in light and dark modes."
+  },
+  {
+    "name": "Evaluating or rejecting a Copilot suggestion",
+    "prompt": "Review a proposed code change critically. If it introduces brittle logic, poor accessibility, or invalid Sudoku state handling, reject it and explain why before revising the implementation."
   }
 ]
