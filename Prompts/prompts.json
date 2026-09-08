@@ -1,0 +1,18 @@
+[
+  {
+    "name": "Sudoku unique-solution check",
+    "prompt": "Review the Sudoku generator and confirm it creates a valid board with exactly one unique solution. Add a helper to validate uniqueness and explain any edge cases."
+  },
+  {
+    "name": "Top 10 leaderboard",
+    "prompt": "Implement a leaderboard that keeps the top 10 scores in localStorage using player name, time, hints used, and difficulty. Sort by fastest time and keep only the best 10 entries."
+  },
+  {
+    "name": "Responsive board styling",
+    "prompt": "Style the Sudoku board so each 3x3 region has a distinct background color without changing the grid layout or causing shifts. Keep it readable in both light and dark mode."
+  },
+  {
+    "name": "Reject bad Copilot suggestion",
+    "prompt": "Evaluate a proposed code change critically. Reject it if it adds brittle logic, poor accessibility, or invalid Sudoku state handling, and explain the issue before revising the implementation."
+  }
+]
