@@ -1,6 +1,6 @@
 # Gridline Sudoku
 
-Gridline Sudoku is a responsive Flask and React-based Sudoku game created as a GitHub Copilot project. The app generates playable puzzles, validates moves, tracks elapsed time, offers hints and difficulty levels, and saves the top 10 scores locally in the browser.
+Gridline Sudoku is a lightweight Python Flask and browser-based Sudoku game built as a GitHub Copilot project. The app generates playable puzzles, validates moves, supports difficulty levels, offers hints, tracks time, and stores local leaderboard scores in the browser.
 
 ## Repository structure
 
@@ -10,15 +10,11 @@ github-copilot-python/
 │   └── instruction.md
 ├── Prompts/
 │   └── prompts.json
-├── Screenshots/
-│   ├── app_dark_mode.png
-│   ├── app_light_mode.png
-│   ├── copilot_grid_style_prompt.png
-│   ├── copilot_rejection_prompt.png
-│   ├── copilot_setup_testing_prompt.png
-│   ├── copilot_top10_score_prompt.png
-│   └── copilot_unique_solution_prompt.png
 ├── README.md
+├── Screenshots/
+│   ├── Dark theme.png
+│   ├── VENV&requirements.png
+│   └── ...
 ├── .gitignore
 ├── starter/
 │   ├── app.py
@@ -27,47 +23,42 @@ github-copilot-python/
 │   ├── static/
 │   │   ├── main.js
 │   │   └── styles.css
-│   └── templates/
-│       └── index.html
-└── venv/
+│   ├── templates/
+│   │   └── index.html
+│   └── venv/
 ```
 
-## Project highlights
+## Features
 
 - Flask backend with Sudoku generation and validation logic
-- Difficulty modes: Easy, Medium, Hard
-- Locked clue cells and invalid-move feedback
-- Hint and check puzzle actions
-- Timer for each round
-- Local leaderboard keeping the top 10 scores
-- Dark mode toggle and responsive design
-- Project rubric evidence stored in the prompt and screenshot folders
+- Easy, Medium, and Hard difficulty settings
+- Locked clue cells and invalid move detection
+- Hint and check actions for puzzle progress
+- Timer and round-based gameplay
+- Local leaderboard saving the top scores in the browser
+- Responsive layout with a dark mode theme
+- Copilot workflow artifacts stored in the repo for project documentation and rubric evidence
 
-## App files
+## Main project files
 
-- starter/app.py: Flask routes for puzzle generation, checking, hints, and game state
-- starter/sudoku_logic.py: board creation, uniqueness checks, puzzle generation, and validation logic
-- starter/templates/index.html: HTML shell for the game UI
-- starter/static/main.js: React-based UI, timer, difficulty logic, hints, leaderboard, and game flow
-- starter/static/styles.css: layout, board styling, responsive behavior, and dark mode theme
-
-## Copilot workflow artifacts
-
-This repository includes the required Copilot process evidence:
-
-- .github/instruction.md: project-specific instruction file for Copilot
-- Prompts/prompts.json: rubric-aligned prompt examples used during development
-- Screenshots/: labeled images showing Copilot prompts, responses, and app states that support the project rubric
+- [starter/app.py](starter/app.py): Flask routes for puzzle generation, validation, hints, and board state
+- [starter/sudoku_logic.py](starter/sudoku_logic.py): Sudoku generation, uniqueness checks, validation, and puzzle logic
+- [starter/templates/index.html](starter/templates/index.html): UI shell for the game
+- [starter/static/main.js](starter/static/main.js): client-side game logic, timer, leaderboard, and interaction handling
+- [starter/static/styles.css](starter/static/styles.css): board styling, layout, and dark mode theme
+- [.github/instruction.md](.github/instruction.md): project-specific Copilot guidance
+- [Prompts/prompts.json](Prompts/prompts.json): prompt examples used as project workflow evidence
+- [Screenshots](Screenshots): screenshot evidence for the project and rubric documentation
 
 ## Requirements
 
 - Python 3.9+
 - Flask
-- Modern browser
+- Modern web browser
 
 ## Run locally
 
-1. Open a terminal and navigate to the project folder.
+1. Open a terminal and go to the app folder.
 
 ```bash
 cd github-copilot-python/starter
@@ -89,13 +80,13 @@ python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 ```
 
-3. Install dependencies.
+3. Install the dependencies.
 
 ```bash
 pip install -r requirements.txt
 ```
 
-4. Run the app.
+4. Start the Flask app.
 
 ```bash
 python app.py
@@ -109,6 +100,6 @@ http://127.0.0.1:5000/
 
 ## Notes
 
-- The app is served from the starter folder rather than the repository root.
-- Score data is stored in browser localStorage.
-- The project is intentionally kept lightweight and focused on the Sudoku gameplay and the Copilot workflow evidence required by the rubric.
+- The application runs from the [starter](starter) directory rather than the repository root.
+- Score data is stored in the browser using localStorage.
+- The project is intentionally kept compact and focused on the Sudoku gameplay and the GitHub Copilot workflow evidence required for the project rubric.

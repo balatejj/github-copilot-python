@@ -1,35 +1,44 @@
 # Copilot Instruction File
 
-## Project goal
-Build and improve a responsive Sudoku web app in Python Flask with a modern, accessible interface.
+## Project objective
+Build and maintain a lightweight Sudoku web application using Python Flask and a browser-based interface. The project should stay small, readable, and aligned with the current repository structure.
 
-## Coding expectations
-- Keep the backend small and clear: Flask routes should handle game state and validation cleanly.
-- Prefer simple, readable functions over over-engineering.
-- Keep game logic in a dedicated module, such as sudoku_logic.py.
-- Preserve a single-solution Sudoku generator and validate puzzle difficulty.
-- Use locked prefilled cells for puzzle state.
-- Provide error handling for invalid board payloads and missing game state.
-- Favor accessible HTML and CSS, including readable text and visible controls in both light and dark modes.
-- Use responsive layout rules so the grid remains stable on mobile and desktop.
-- Add comments where logic is non-trivial, especially for generation, validation, and scoring.
-- When suggesting code, prefer solutions that are robust, testable, and easier to maintain.
+## Repository expectations
+- Keep the main application code inside the [starter](../starter) folder.
+- Keep project-level evidence and workflow files in the repo root, such as [README.md](../README.md), [Prompts](../Prompts), and [Screenshots](../Screenshots).
+- Avoid adding unnecessary files or duplicate app logic outside the established structure.
+- Preserve a clear separation between backend logic, frontend behavior, and styling.
+
+## Coding standards
+- Prefer simple, readable, maintainable code over over-engineered solutions.
+- Keep Flask routes focused on game state, validation, and puzzle actions.
+- Keep the Sudoku generation and validation rules in a dedicated logic module such as [starter/sudoku_logic.py](../starter/sudoku_logic.py).
+- Validate puzzle generation to ensure a unique solution and consistent difficulty behavior.
+- Lock prefilled clue cells and prevent invalid overwrites of original values.
+- Handle missing or malformed board data gracefully.
+- Use accessible UI patterns, readable text, and visible controls in both light and dark themes.
+- Keep the layout responsive and stable on desktop and mobile screens.
+- Add brief comments only where logic is not obvious.
 
 ## Game requirements
-- Support easy, medium, and hard difficulty.
-- Generate puzzles with exactly one unique solution.
-- Lock prefilled clues.
-- Highlight invalid entries clearly.
-- Add a hint button that fills one valid empty cell.
-- Add a check button that reports incorrect cells.
-- Track elapsed time and save the top 10 scores in localStorage.
-- Keep the board visually consistent, with 3x3 subgrids color-coded without layout shifts.
-- Include a dark mode toggle and ensure all labels and controls remain readable.
+- Support Easy, Medium, and Hard difficulty levels.
+- Generate valid Sudoku puzzles with a single unique solution.
+- Let users fill empty cells, check progress, and request hints.
+- Highlight incorrect entries or invalid board states clearly.
+- Track game time and persist the top scores in the browser using localStorage.
+- Maintain clean 3x3 subgrid organization without visual shifts or broken spacing.
+- Include a dark mode theme and ensure all labels, buttons, and cell values remain readable.
+
+## UI and design expectations
+- Keep the interface polished but minimal.
+- Ensure controls have strong contrast and consistent spacing.
+- Fix readability issues in dark mode before finalizing styling updates.
+- Maintain a clean board layout with obvious selection, clue, and error states.
 
 ## Copilot usage guidelines
-- Produce concise, production-ready code and avoid unnecessary files.
-- Before accepting changes, review whether the solution matches the project requirements.
-- If a suggestion introduces a bug, insecure behavior, or poor accessibility, reject it and explain why.
-- Prefer explicit, maintainable code over clever-but-opaque shortcuts.
-- Keep comments useful and brief.
-- Preserve existing app structure when making edits.
+- Produce concise, production-ready code and avoid unnecessary complexity.
+- Check whether suggested changes match the project structure and existing design patterns.
+- Reject changes that introduce accessibility issues, broken game logic, or unnecessary file clutter.
+- Prefer explicit, robust implementations over clever shortcuts.
+- Keep comments helpful and brief.
+- Preserve the existing app architecture unless a documented change requires restructuring.
