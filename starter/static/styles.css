@@ -10,6 +10,16 @@ body.dark .topbar, body.dark .board, body.dark .number-chip, body.dark .scores-p
 body.dark .topbar, body.dark .layout, body.dark .sidebar, body.dark .stats-card, body.dark .scores-panel, body.dark .completion-modal { border-color:var(--line); }
 body.dark .cell { background:var(--region-color, transparent); border-color:var(--line); color:var(--ink); }
 body.dark .cell:disabled { color:var(--ink); -webkit-text-fill-color:var(--ink); opacity:1; }
+.board .cell.error-cell {
+  background: #ffd9d0 !important;
+  color: #8a2515 !important;
+  box-shadow: inset 0 0 0 2px #b13e28;
+}
+body.dark .board .cell.error-cell {
+  background: #522b28 !important;
+  color: #ffe4dc !important;
+}
+
 body.dark .number-chip.active { background:var(--accent-soft); border-color:var(--accent); color:var(--accent); }
 body.dark .number-chip.complete { background:var(--success); border-color:#7fc7a4; color:#d0f5df; }
 body.dark .message { color:var(--ink); }

@@ -9,10 +9,10 @@ function Header({ darkMode, onToggle }) {
   return h('header', { className: 'topbar' }, h('div', { className: 'brand' }, h('span', { className: 'brand-mark' }, '9'), h('div', null, h('strong', null, 'GRIDLINE'), h('span', null, 'A focused Sudoku studio'))), h('button', { className: 'theme-toggle', onClick: onToggle }, darkMode ? 'Light mode' : 'Dark mode'));
 }
 
-function Board({ board, puzzle, hints, errors, selectedNumber, onChange }) {
+function Board({ board, puzzle, hints, errors, selectedNumber, onChange, onSelectCell }) {
   return h('div', { className: 'board', role: 'grid', 'aria-label': 'Sudoku board' }, board.map((row, rowIndex) => row.map((value, colIndex) => {
     const key = `${rowIndex}-${colIndex}`; const locked = puzzle[rowIndex][colIndex] !== 0 || hints.has(key);
-    return h('input', { key, className: `cell ${selectedNumber !== 0 && value === selectedNumber ? 'number-highlight' : ''} ${hints.has(key) ? 'hint-cell' : ''} ${errors.has(key) ? 'error-cell' : ''}`, value: value || '', disabled: locked, maxLength: 1, inputMode: 'numeric', 'aria-label': `Row ${rowIndex + 1}, column ${colIndex + 1}`, onChange: event => onChange(rowIndex, colIndex, event.target.value), onKeyDown: event => { if (!/^[1-9]$/.test(event.key) && !['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight'].includes(event.key)) event.preventDefault(); } });
+    return h('input', { key, className: `cell ${selectedNumber !== 0 && value === selectedNumber ? 'number-highlight' : ''} ${hints.has(key) ? 'hint-cell' : ''} ${errors.has(key) ? 'error-cell' : ''}`, value: value || '', disabled: locked, maxLength: 1, inputMode: 'numeric', 'aria-label': `Row ${rowIndex + 1}, column ${colIndex + 1}`, onFocus: () => onSelectCell(rowIndex, colIndex), onChange: event => onChange(rowIndex, colIndex, event.target.value), onKeyDown: event => { if (!/^[1-9]$/.test(event.key) && !['Backspace', 'Delete', 'Tab', 'ArrowLeft', 'ArrowRight'].includes(event.key)) event.preventDefault(); } });
   })));
 }
 
@@ -35,16 +35,58 @@ function CompletionModal({ seconds, hintsUsed, onSave }) {
 }
 
 function App() {
-  const [difficulty, setDifficulty] = useState('medium'); const [puzzle, setPuzzle] = useState(emptyBoard()); const [board, setBoard] = useState(emptyBoard()); const [hints, setHints] = useState(new Set()); const [errors, setErrors] = useState(new Set()); const [selectedNumber, setSelectedNumber] = useState(0); const [seconds, setSeconds] = useState(0); const [hintsUsed, setHintsUsed] = useState(0); const [scores, setScores] = useState(readScores); const [message, setMessage] = useState(''); const [status, setStatus] = useState('idle'); const [darkMode, setDarkMode] = useState(() => localStorage.getItem('gridline-dark') === 'true'); const [completed, setCompleted] = useState(false);
+  const [difficulty, setDifficulty] = useState('medium'); const [puzzle, setPuzzle] = useState(emptyBoard()); const [board, setBoard] = useState(emptyBoard()); const [hints, setHints] = useState(new Set()); const [errors, setErrors] = useState(new Set()); const [selectedNumber, setSelectedNumber] = useState(0); const [seconds, setSeconds] = useState(0); const [hintsUsed, setHintsUsed] = useState(0); const [scores, setScores] = useState(readScores); const [message, setMessage] = useState(''); const [status, setStatus] = useState('idle'); const [darkMode, setDarkMode] = useState(() => localStorage.getItem('gridline-dark') === 'true'); const [completed, setCompleted] = useState(false); const [selectedCell, setSelectedCell] = useState({ row: 0, col: 0 });
   useEffect(() => { document.body.classList.toggle('dark', darkMode); localStorage.setItem('gridline-dark', darkMode); }, [darkMode]);
   useEffect(() => { if (status === 'playing') { const id = setInterval(() => setSeconds(value => value + 1), 1000); return () => clearInterval(id); } }, [status]);
   async function startGame(nextDifficulty = difficulty) { setStatus('loading'); setMessage(''); setErrors(new Set()); setHints(new Set()); setSelectedNumber(0); setHintsUsed(0); setSeconds(0); setCompleted(false); try { const response = await fetch(`/new?difficulty=${nextDifficulty}`); const data = await response.json(); setDifficulty(nextDifficulty); setPuzzle(data.puzzle); setBoard(data.puzzle.map(row => row.slice())); setStatus('playing'); } catch { setStatus('idle'); setMessage('Could not start a new puzzle. Please try again.'); } }
   useEffect(() => { startGame(); }, []);
   function updateCell(row, col, rawValue) { const value = rawValue === '' ? 0 : Number(rawValue); const next = board.map(line => line.slice()); next[row][col] = value; setBoard(next); const conflict = value !== 0 && (next[row].some((cell, index) => index !== col && cell === value) || next.some((line, index) => index !== row && line[col] === value) || next.slice(Math.floor(row / 3) * 3, Math.floor(row / 3) * 3 + 3).some((line, lineIndex) => line.slice(Math.floor(col / 3) * 3, Math.floor(col / 3) * 3 + 3).some((cell, cellIndex) => cell === value && (lineIndex !== row % 3 || cellIndex !== col % 3)))); setErrors(previous => { const result = new Set(previous); if (conflict) result.add(`${row}-${col}`); else result.delete(`${row}-${col}`); return result; }); setMessage(conflict ? 'That number conflicts with this row, column, or box.' : ''); }
-  async function checkPuzzle() { const response = await fetch('/check', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ board }) }); const data = await response.json(); if (data.error) { setMessage(data.error); return; } const nextErrors = new Set(data.incorrect.map(([row, col]) => `${row}-${col}`)); setErrors(nextErrors); if (!nextErrors.size) { setStatus('complete'); setCompleted(true); setMessage('Puzzle complete. Excellent work.'); } else setMessage(`${nextErrors.size} cell${nextErrors.size === 1 ? '' : 's'} need another look.`); }
-  async function requestHint() { const response = await fetch('/hint', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ board }) }); const data = await response.json(); if (data.error) { setMessage(data.error); return; } const next = board.map(line => line.slice()); next[data.row][data.col] = data.value; setBoard(next); setHints(previous => new Set(previous).add(`${data.row}-${data.col}`)); setHintsUsed(value => value + 1); setMessage('A correct cell has been revealed and locked.'); }
+  async function checkPuzzle() {
+    try {
+      const response = await fetch('/check', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ board }) });
+      const data = await response.json();
+      if (!response.ok) {
+        setMessage(data.error || 'Could not check the puzzle.');
+        return;
+      }
+      const nextErrors = new Set(data.incorrect.map(([row, col]) => `${row}-${col}`));
+      setErrors(nextErrors);
+      if (!nextErrors.size) {
+        setStatus('complete');
+        setCompleted(true);
+        setMessage('Puzzle complete. Excellent work.');
+      } else {
+        setMessage(`${nextErrors.size} cell${nextErrors.size === 1 ? '' : 's'} need another look.`);
+      }
+    } catch {
+      setMessage('Could not check the puzzle. Please try again.');
+    }
+  }
+  async function requestHint(row = selectedCell.row, col = selectedCell.col) {
+    try {
+      const response = await fetch('/hint', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ board, row, col }) });
+      const data = await response.json();
+      if (!response.ok) {
+        setMessage(data.error || 'Could not request a hint.');
+        return;
+      }
+      const next = board.map(line => line.slice());
+      next[data.row][data.col] = data.value;
+      setBoard(next);
+      setErrors(previous => {
+        const remaining = new Set(previous);
+        remaining.delete(`${data.row}-${data.col}`);
+        return remaining;
+      });
+      setHints(previous => new Set(previous).add(`${data.row}-${data.col}`));
+      setHintsUsed(value => value + 1);
+      setMessage('A correct cell has been revealed and locked.');
+    } catch {
+      setMessage('Could not request a hint. Please try again.');
+    }
+  }
   function saveScore(event) { event.preventDefault(); const name = new FormData(event.currentTarget).get('name')?.trim() || 'Anonymous'; const nextScores = [...scores, { name, time: seconds, hints: hintsUsed, difficulty: DIFFICULTIES[difficulty], date: Date.now() }].sort((a, b) => a.time - b.time).slice(0, 10); setScores(nextScores); localStorage.setItem(STORAGE_KEY, JSON.stringify(nextScores)); setCompleted(false); }
   const modal = completed && h(CompletionModal, { seconds, hintsUsed, onSave: saveScore });
-  return h('div', { className: 'app-shell' }, h(Header, { darkMode, onToggle: () => setDarkMode(value => !value) }), h('div', { className: 'layout' }, h('section', { className: 'game-area' }, h('div', { className: 'intro' }, h('div', { className: 'eyebrow' }, 'Daily practice'), h('h1', null, 'Find your flow.'), h('p', null, 'A clean board, one solution, zero distractions.')), h('div', { className: 'game-toolbar' }, h('div', { className: 'difficulty-tabs' }, Object.keys(DIFFICULTIES).map(level => h('button', { key: level, className: difficulty === level ? 'selected' : '', onClick: () => startGame(level) }, DIFFICULTIES[level]))), h('div', { className: 'timer' }, h('span', null, 'TIME'), h('strong', null, formatTime(seconds)))), h(Board, { board, puzzle, hints, errors, selectedNumber, onChange: updateCell }), h(NumberTracker, { board, selectedNumber, onSelect: setSelectedNumber }), h('div', { className: 'game-actions' }, h('button', { className: 'button primary', onClick: checkPuzzle, disabled: status !== 'playing' }, 'Check puzzle'), h('button', { className: 'button secondary', onClick: requestHint, disabled: status !== 'playing' }, 'Use a hint'), h('button', { className: 'new-game', onClick: () => startGame(), disabled: status === 'loading' }, 'New puzzle')), h('p', { className: `message ${errors.size ? 'message-error' : ''}` }, message)), h('aside', { className: 'sidebar' }, h('div', { className: 'stats-card' }, h('span', { className: 'eyebrow' }, 'Current run'), h('div', { className: 'stat-row' }, h('span', null, 'Difficulty'), h('strong', null, DIFFICULTIES[difficulty])), h('div', { className: 'stat-row' }, h('span', null, 'Hints used'), h('strong', null, hintsUsed)), h('div', { className: 'stat-row' }, h('span', null, 'Status'), h('strong', null, status === 'complete' ? 'Solved' : 'In progress'))), h(Scores, { scores }))), modal);
+  return h('div', { className: 'app-shell' }, h(Header, { darkMode, onToggle: () => setDarkMode(value => !value) }), h('div', { className: 'layout' }, h('section', { className: 'game-area' }, h('div', { className: 'intro' }, h('div', { className: 'eyebrow' }, 'Daily practice'), h('h1', null, 'Find your flow.'), h('p', null, 'A clean board, one solution, zero distractions.')), h('div', { className: 'game-toolbar' }, h('div', { className: 'difficulty-tabs' }, Object.keys(DIFFICULTIES).map(level => h('button', { key: level, className: difficulty === level ? 'selected' : '', onClick: () => startGame(level) }, DIFFICULTIES[level]))), h('div', { className: 'timer' }, h('span', null, 'TIME'), h('strong', null, formatTime(seconds)))), h(Board, { board, puzzle, hints, errors, selectedNumber, onChange: updateCell, onSelectCell: (row, col) => setSelectedCell({ row, col }) }), h(NumberTracker, { board, selectedNumber, onSelect: setSelectedNumber }), h('div', { className: 'game-actions' }, h('button', { className: 'button primary', onClick: checkPuzzle, disabled: status !== 'playing' }, 'Check puzzle'), h('button', { className: 'button secondary', onClick: () => requestHint(selectedCell.row, selectedCell.col), disabled: status !== 'playing' }, 'Use a hint'), h('button', { className: 'new-game', onClick: () => startGame(), disabled: status === 'loading' }, 'New puzzle')), h('p', { className: `message ${errors.size ? 'message-error' : ''}` }, message)), h('aside', { className: 'sidebar' }, h('div', { className: 'stats-card' }, h('span', { className: 'eyebrow' }, 'Current run'), h('div', { className: 'stat-row' }, h('span', null, 'Difficulty'), h('strong', null, DIFFICULTIES[difficulty])), h('div', { className: 'stat-row' }, h('span', null, 'Hints used'), h('strong', null, hintsUsed)), h('div', { className: 'stat-row' }, h('span', null, 'Status'), h('strong', null, status === 'complete' ? 'Solved' : 'In progress'))), h(Scores, { scores }))), modal);
 }
 ReactDOM.createRoot(document.getElementById('root')).render(h(App));

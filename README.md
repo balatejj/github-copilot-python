@@ -1,6 +1,6 @@
 # Gridline Sudoku
 
-Gridline Sudoku is a lightweight Python Flask and browser-based Sudoku game built as a GitHub Copilot project. The app generates playable puzzles, validates moves, supports difficulty levels, offers hints, tracks time, and stores local leaderboard scores in the browser.
+Gridline Sudoku is a lightweight Python Flask and browser-based Sudoku game built as a GitHub Copilot project. The app generates playable puzzles, validates moves, supports difficulty settings, offers hints, and tracks puzzle state in the browser.
 
 ## Repository structure
 
@@ -12,53 +12,52 @@ github-copilot-python/
 │   └── prompts.json
 ├── README.md
 ├── Screenshots/
-│   ├── Dark theme.png
-│   ├── VENV&requirements.png
-│   └── ...
-├── .gitignore
 ├── starter/
 │   ├── app.py
 │   ├── requirements.txt
+│   ├── pytest.ini
 │   ├── sudoku_logic.py
 │   ├── static/
 │   │   ├── main.js
 │   │   └── styles.css
 │   ├── templates/
 │   │   └── index.html
-│   └── venv/
+│   └── tests/
+│       ├── test_app_routes.py
+│       └── test_sudoku_logic.py
+└── .gitignore
 ```
 
-## Features
+## Implemented features
 
-- Flask backend with Sudoku generation and validation logic
-- Easy, Medium, and Hard difficulty settings
-- Locked clue cells and invalid move detection
-- Hint and check actions for puzzle progress
-- Timer and round-based gameplay
-- Local leaderboard saving the top scores in the browser
-- Responsive layout with a dark mode theme
-- Copilot workflow artifacts stored in the repo for project documentation and rubric evidence
+- Flask routes for puzzle creation, checking, and hint generation
+- Difficulty levels: easy, medium, and hard
+- Puzzle generation using a Sudoku solver and uniqueness check logic
+- Board shape validation and request validation in the Flask API
+- A browser UI with a clue cell model, empty-cell input, and local game feedback
+- Optional dark styling and responsive UI behavior in the static CSS and JavaScript files
 
-## Main project files
+## Main files
 
-- [starter/app.py](starter/app.py): Flask routes for puzzle generation, validation, hints, and board state
-- [starter/sudoku_logic.py](starter/sudoku_logic.py): Sudoku generation, uniqueness checks, validation, and puzzle logic
-- [starter/templates/index.html](starter/templates/index.html): UI shell for the game
-- [starter/static/main.js](starter/static/main.js): client-side game logic, timer, leaderboard, and interaction handling
-- [starter/static/styles.css](starter/static/styles.css): board styling, layout, and dark mode theme
-- [.github/instruction.md](.github/instruction.md): project-specific Copilot guidance
-- [Prompts/prompts.json](Prompts/prompts.json): prompt examples used as project workflow evidence
-- [Screenshots](Screenshots): screenshot evidence for the project and rubric documentation
+- [starter/app.py](starter/app.py): Flask application and HTTP endpoints
+- [starter/sudoku_logic.py](starter/sudoku_logic.py): puzzle generator, solver helpers, and uniqueness checks
+- [starter/templates/index.html](starter/templates/index.html): HTML UI shell
+- [starter/static/main.js](starter/static/main.js): client-side interaction and UI behavior
+- [starter/static/styles.css](starter/static/styles.css): styling and dark-theme layout rules
+- [starter/tests/test_app_routes.py](starter/tests/test_app_routes.py): endpoint and request validation tests
+- [starter/tests/test_sudoku_logic.py](starter/tests/test_sudoku_logic.py): Sudoku generation and logic tests
+- [.github/instruction.md](.github/instruction.md): project instructions for this repository
 
 ## Requirements
 
 - Python 3.9+
-- Flask
+- Flask 2+
+- Pytest 8+
 - Modern web browser
 
 ## Run locally
 
-1. Open a terminal and go to the app folder.
+1. Open a terminal in the repository root and move into the app folder.
 
 ```bash
 cd github-copilot-python/starter
@@ -86,13 +85,19 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-4. Start the Flask app.
+4. Run the tests.
+
+```bash
+python -m pytest -q
+```
+
+5. Start the Flask app.
 
 ```bash
 python app.py
 ```
 
-5. Open the app in a browser.
+6. Open the app in a browser.
 
 ```text
 http://127.0.0.1:5000/
@@ -100,6 +105,6 @@ http://127.0.0.1:5000/
 
 ## Notes
 
-- The application runs from the [starter](starter) directory rather than the repository root.
-- Score data is stored in the browser using localStorage.
-- The project is intentionally kept compact and focused on the Sudoku gameplay and the GitHub Copilot workflow evidence required for the project rubric.
+- The request handler and game routes stay in the [starter/app.py](starter/app.py) file.
+- Puzzle generation and Sudoku validation logic remain separate in [starter/sudoku_logic.py](starter/sudoku_logic.py).
+- The project is intentionally small and organized around a single Flask starter app rather than a larger package structure.

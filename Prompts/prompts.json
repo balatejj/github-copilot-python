@@ -18,5 +18,5 @@
   {
     "name": "Evaluating or rejecting a Copilot suggestion",
     "prompt": "Review a proposed code change critically. If it introduces brittle logic, poor accessibility, or invalid Sudoku state handling, reject it and explain why before revising the implementation."
-  }
-]
+  } ]
+  
