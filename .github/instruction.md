@@ -15,6 +15,7 @@ Build and maintain a lightweight Sudoku web application using Python Flask and a
 - Keep Sudoku generation and validation rules in the dedicated logic module [starter/sudoku_logic.py](../starter/sudoku_logic.py).
 - Keep HTML, CSS, and JavaScript assets in [starter/templates/index.html](../starter/templates/index.html), [starter/static/styles.css](../starter/static/styles.css), and [starter/static/main.js](../starter/static/main.js).
 - Keep automated tests in [starter/tests/test_app_routes.py](../starter/tests/test_app_routes.py) and [starter/tests/test_sudoku_logic.py](../starter/tests/test_sudoku_logic.py).
+- Keep dependency and pytest configuration in the same project root as the Flask app: [starter/requirements.txt](../starter/requirements.txt) and [starter/pytest.ini](../starter/pytest.ini).
 
 ## Coding standards
 - Prefer simple, readable, maintainable code over over-engineered solutions.

@@ -36,6 +36,7 @@ github-copilot-python/
 - Board shape validation and request validation in the Flask API
 - A browser UI with a clue cell model, empty-cell input, and local game feedback
 - Optional dark styling and responsive UI behavior in the static CSS and JavaScript files
+- Automated regression coverage in the starter test folder using Flask and Sudoku logic checks
 
 ## Main files
 
